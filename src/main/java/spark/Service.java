@@ -20,6 +20,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
@@ -36,6 +37,7 @@ import spark.embeddedserver.jetty.websocket.WebSocketHandlerWrapper;
 import spark.route.HttpMethod;
 import spark.route.Routes;
 import spark.route.ServletRoutes;
+import spark.routematch.RouteMatch;
 import spark.ssl.SslStores;
 import spark.staticfiles.MimeType;
 import spark.staticfiles.StaticFilesConfiguration;
@@ -79,7 +81,7 @@ public final class Service extends Routable {
     private CountDownLatch initLatch = new CountDownLatch(1);
     private CountDownLatch stopLatch = new CountDownLatch(0);
 
-    private Object embeddedServerIdentifier = null;
+    private Object embeddedServerIdentifier = EmbeddedServers.defaultIdentifier();
 
     public final Redirect redirect;
     public final StaticFiles staticFiles;
@@ -112,6 +114,29 @@ public final class Service extends Routable {
         } else {
             staticFilesConfiguration = StaticFilesConfiguration.create();
         }
+    }
+
+    /**
+     * Set the identifier used to select the EmbeddedServer;
+     * null for the default.
+     *
+     * @param obj the identifier passed to {@link EmbeddedServers}.
+     */
+    public synchronized void embeddedServerIdentifier(Object obj) {
+        if (initialized) {
+            throwBeforeRouteMappingException();
+        }
+        embeddedServerIdentifier = obj;
+    }
+
+    /**
+     * Get the identifier used to select the EmbeddedServer;
+     * null for the default.
+     *
+     * @param obj the identifier passed to {@link EmbeddedServers}.
+     */
+    public synchronized Object embeddedServerIdentifier() {
+        return embeddedServerIdentifier;
     }
 
     /**
@@ -314,7 +339,7 @@ public final class Service extends Routable {
         if (initialized && !isRunningFromServlet()) {
             throwBeforeRouteMappingException();
         }
-        
+
         if (!staticFilesConfiguration.isStaticResourcesSet()) {
             staticFilesConfiguration.configure(folder);
         } else {
@@ -334,13 +359,40 @@ public final class Service extends Routable {
         if (initialized && !isRunningFromServlet()) {
             throwBeforeRouteMappingException();
         }
-        
+
         if (!staticFilesConfiguration.isExternalStaticResourcesSet()) {
             staticFilesConfiguration.configureExternal(externalFolder);
         } else {
             LOG.warn("External static file location has already been set");
         }
         return this;
+    }
+
+    /**
+     * Unmaps a particular route from the collection of those that have been previously routed.
+     * Search for previously established routes using the given path and unmaps any matches that are found.
+     *
+     * @param path the route path
+     * @return <tt>true</tt> if this is a matching route which has been previously routed
+     * @throws IllegalArgumentException if <tt>path</tt> is null or blank
+     */
+    public boolean unmap(String path) {
+        return routes.remove(path);
+    }
+
+    /**
+     * Unmaps a particular route from the collection of those that have been previously routed.
+     * Search for previously established routes using the given path and HTTP method, unmaps any
+     * matches that are found.
+     *
+     * @param path       the route path
+     * @param httpMethod the http method
+     * @return <tt>true</tt> if this is a matching route that has been previously routed
+     * @throws IllegalArgumentException if <tt>path</tt> is null or blank or if <tt>httpMethod</tt> is null, blank,
+     *                                  or an invalid HTTP method
+     */
+    public boolean unmap(String path, String httpMethod) {
+        return routes.remove(path, httpMethod);
     }
 
     /**
@@ -467,7 +519,7 @@ public final class Service extends Routable {
     	}
         initiateStop();
     }
-    
+
     /**
      * Waits for the Spark server to stop.
      * <b>Warning:</b> this method should not be called from a request handler.
@@ -480,7 +532,7 @@ public final class Service extends Routable {
             Thread.currentThread().interrupt();
         }
     }
-    
+
     private void initiateStop() {
     	stopLatch = new CountDownLatch(1);
         Thread stopThread = new Thread(() -> {
@@ -488,7 +540,7 @@ public final class Service extends Routable {
                 server.extinguish();
                 initLatch = new CountDownLatch(1);
             }
-            
+
             routes.clear();
             exceptionMapper.clear();
             staticFilesConfiguration.clear();
@@ -521,6 +573,12 @@ public final class Service extends Routable {
 
     public String getPaths() {
         return pathDeque.stream().collect(Collectors.joining(""));
+    }
+    /**
+     * @return all routes information from this service
+     */
+    public List<RouteMatch> routes() {
+        return routes.findAll();
     }
 
     @Override
