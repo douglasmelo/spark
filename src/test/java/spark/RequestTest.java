@@ -168,7 +168,7 @@ public class RequestTest {
     }
 
     @Test
-    public void matchedRoutePathShouldBeNullInBefore() throws Exception {
+    public void matchedRoutePathShouldNotBeNullInBefore() throws Exception {
         final AtomicReference<String> matchedRoutePath = new AtomicReference<>();
         before((q, p) -> {
             matchedRoutePath.set(q.matchedRoutePath());
@@ -176,7 +176,8 @@ public class RequestTest {
 
         http.get("/users/bob");
 
-        assertNull(matchedRoutePath.get());
+        assertNotNull(matchedRoutePath.get());
+        assertThat(matchedRoutePath.get(), is(THE_MATCHED_ROUTE));
     }
 
     @Test

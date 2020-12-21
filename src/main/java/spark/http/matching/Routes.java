@@ -27,15 +27,13 @@ import spark.routematch.RouteMatch;
  */
 final class Routes {
 
-    static void execute(RouteContext context) throws Exception {
+    static void execute(RouteContext context, RouteMatch routeMatch) throws Exception {
 
         Object content = context.body().get();
 
-        RouteMatch match = context.routeMatcher().find(context.httpMethod(), context.uri(), context.acceptType());
-
         Object target = null;
-        if (match != null) {
-            target = match.getTarget();
+        if (routeMatch != null) {
+            target = routeMatch.getTarget();
         } else if (context.httpMethod() == HttpMethod.head && context.body().notSet()) {
             // See if get is mapped to provide default head mapping
             content =
@@ -50,13 +48,13 @@ final class Routes {
                 RouteImpl route = ((RouteImpl) target);
 
                 if (context.requestWrapper().getDelegate() == null) {
-                    Request request = RequestResponseFactory.create(match, context.httpRequest());
+                    Request request = RequestResponseFactory.create(routeMatch, context.httpRequest());
                     context.requestWrapper().setDelegate(request);
                 } else {
-                    context.requestWrapper().changeMatch(match);
+                    context.requestWrapper().changeMatch(routeMatch);
                 }
 
-                context.requestWrapper().matchedRoutePath(match.getMatchUri());
+                context.requestWrapper().matchedRoutePath(routeMatch.getMatchUri());
                 context.responseWrapper().setDelegate(context.response());
 
                 Object element = route.handle(context.requestWrapper(), context.responseWrapper());
