@@ -72,7 +72,7 @@ public final class Service extends Routable {
     protected int maxThreads = -1;
     protected int minThreads = -1;
     protected int threadIdleTimeoutMillis = -1;
-    protected Optional<Integer> webSocketIdleTimeoutMillis = Optional.empty();
+    protected Optional<Long> webSocketIdleTimeoutMillis = Optional.empty();
 
     protected EmbeddedServer server;
     protected Deque<String> pathDeque = new ArrayDeque<>();
@@ -94,6 +94,8 @@ public final class Service extends Routable {
         LOG.error("ignite failed", e);
         System.exit(100);
     };
+
+    private boolean trustForwardHeaders = true;
 
     /**
      * Creates a new Service (a Spark instance). This should be used instead of the static API if the user wants
@@ -132,8 +134,6 @@ public final class Service extends Routable {
     /**
      * Get the identifier used to select the EmbeddedServer;
      * null for the default.
-     *
-     * @param obj the identifier passed to {@link EmbeddedServers}.
      */
     public synchronized Object embeddedServerIdentifier() {
         return embeddedServerIdentifier;
@@ -440,7 +440,7 @@ public final class Service extends Routable {
      * @param timeoutMillis The max idle timeout in milliseconds.
      * @return the object with max idle timeout set for WebSocket connections
      */
-    public synchronized Service webSocketIdleTimeoutMillis(int timeoutMillis) {
+    public synchronized Service webSocketIdleTimeoutMillis(long timeoutMillis) {
         if (initialized) {
             throwBeforeRouteMappingException();
         }
@@ -628,6 +628,7 @@ public final class Service extends Routable {
                                                     hasMultipleHandlers());
 
                     server.configureWebSockets(webSocketHandlers, webSocketIdleTimeoutMillis);
+                    server.trustForwardHeaders(trustForwardHeaders);
 
                     port = server.ignite(
                             ipAddress,
@@ -742,6 +743,32 @@ public final class Service extends Routable {
      */
     public HaltException halt(int status, String body) {
         throw new HaltException(status, body);
+    }
+
+    /**
+     * Sets Spark to trust the HTTP headers that are commonly used in reverse proxies.
+     * More info at https://www.eclipse.org/jetty/javadoc/current/org/eclipse/jetty/server/ForwardedRequestCustomizer.html
+     */
+    public synchronized Service trustForwardHeaders() {
+        if (initialized) {
+            throwBeforeRouteMappingException();
+        }
+        this.trustForwardHeaders = true;
+
+        return this;
+    }
+
+    /**
+     * Sets Spark to NOT trust the HTTP headers that are commonly used in reverse proxies.
+     * More info at https://www.eclipse.org/jetty/javadoc/current/org/eclipse/jetty/server/ForwardedRequestCustomizer.html
+     */
+    public synchronized Service untrustForwardHeaders() {
+        if (initialized) {
+            throwBeforeRouteMappingException();
+        }
+        this.trustForwardHeaders = false;
+
+        return this;
     }
 
     /**
