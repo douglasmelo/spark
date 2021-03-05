@@ -130,11 +130,9 @@ public class MatcherFilter implements Filter {
 
         try {
             try {
-                RouteMatch routeMatch = context.routeMatcher()
-                                               .find(context.httpMethod(), context.uri(), context.acceptType());
-                BeforeFilters.execute(context, routeMatch);
-                Routes.execute(context, routeMatch);
-                AfterFilters.execute(context, routeMatch);
+                BeforeFilters.execute(context);
+                Routes.execute(context);
+                AfterFilters.execute(context);
 
             } catch (HaltException halt) {
 

@@ -29,7 +29,7 @@ import spark.routematch.RouteMatch;
  */
 final class BeforeFilters {
 
-    static void execute(RouteContext context, RouteMatch routeMatch) throws Exception {
+    static void execute(RouteContext context) throws Exception {
         Object content = context.body().get();
 
         List<RouteMatch> matchSet = context.routeMatcher().findMultiple(HttpMethod.before, context.uri(), context.acceptType());
@@ -44,9 +44,6 @@ final class BeforeFilters {
 
                 context.requestWrapper().setDelegate(request);
                 context.responseWrapper().setDelegate(context.response());
-                if (routeMatch != null) {
-                    context.requestWrapper().matchedRoutePath(routeMatch.getMatchUri());
-                }
 
                 filter.handle(context.requestWrapper(), context.responseWrapper());
 

@@ -30,7 +30,7 @@ import spark.routematch.RouteMatch;
  */
 final class AfterFilters {
 
-    static void execute(RouteContext context, RouteMatch routeMatch) throws Exception {
+    static void execute(RouteContext context) throws Exception {
 
         Object content = context.body().get();
 
@@ -51,9 +51,6 @@ final class AfterFilters {
                 }
 
                 context.responseWrapper().setDelegate(context.response());
-                if (routeMatch != null) {
-                    context.requestWrapper().matchedRoutePath(routeMatch.getMatchUri());
-                }
 
                 FilterImpl filter = (FilterImpl) filterTarget;
                 filter.handle(context.requestWrapper(), context.responseWrapper());
