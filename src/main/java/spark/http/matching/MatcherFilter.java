@@ -34,7 +34,6 @@ import spark.RequestResponseFactory;
 import spark.Response;
 import spark.embeddedserver.jetty.HttpRequestWrapper;
 import spark.route.HttpMethod;
-import spark.routematch.RouteMatch;
 import spark.serialization.SerializerChain;
 import spark.staticfiles.StaticFilesConfiguration;
 
@@ -130,6 +129,7 @@ public class MatcherFilter implements Filter {
 
         try {
             try {
+
                 BeforeFilters.execute(context);
                 Routes.execute(context);
                 AfterFilters.execute(context);

@@ -21,7 +21,6 @@ import java.util.List;
 import spark.FilterImpl;
 import spark.Request;
 import spark.RequestResponseFactory;
-import spark.Route;
 import spark.route.HttpMethod;
 import spark.routematch.RouteMatch;
 
