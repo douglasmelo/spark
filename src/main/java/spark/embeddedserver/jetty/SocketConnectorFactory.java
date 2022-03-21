@@ -113,6 +113,8 @@ public class SocketConnectorFactory {
         httpConfig.setSecureScheme("https");
         if(trustForwardHeaders)
             httpConfig.addCustomizer(new ForwardedRequestCustomizer());
+        httpConfig.setRequestHeaderSize(8192 * 2);
+        httpConfig.setResponseHeaderSize(8192 * 2);
         return new HttpConnectionFactory(httpConfig);
     }
 
