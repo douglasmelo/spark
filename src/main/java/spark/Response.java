@@ -314,4 +314,19 @@ public class Response {
         response.addCookie(cookie);
     }
 
+    /**
+     * Removes the cookie with given path and name.
+     *
+     * @param path path of the cookie
+     * @param name name of the cookie
+     * @param domain domain of the cookie
+     */
+    public void removeCookie(String path, String name, String domain) {
+        Cookie cookie = new Cookie(name, "");
+        cookie.setPath(path);
+        cookie.setMaxAge(0);
+        cookie.setDomain(domain);
+        response.addCookie(cookie);
+    }
+
 }

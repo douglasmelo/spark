@@ -269,6 +269,26 @@ public class ResponseTest {
     }
 
     @Test
+    public void testRemoveCookie_shouldModifyAddDomainPropertiesFromCookieSuccessfully() {
+        final String finalDomain = "mydomain.com";
+        final String finalPath = "/cookie/SetCookie";
+        final String finalName = "cookie_name";
+        final String finalValue = "Test Cookie";
+        final int finalMaxAge = 86400;
+        final boolean finalSecured = true;
+        final boolean finalHttpOnly = true;
+
+        response.cookie(finalDomain, finalPath, finalName, finalValue, finalMaxAge, finalSecured, finalHttpOnly);
+
+        response.removeCookie(finalPath, finalName, finalDomain);
+        verify(httpServletResponse, times(2)).addCookie(cookieArgumentCaptor.capture());
+
+        assertEquals("Should return empty value for the given cookie name", "", cookieArgumentCaptor.getValue().getValue());
+        assertEquals("Should return an 0 for maximum cookie age", 0, cookieArgumentCaptor.getValue().getMaxAge());
+        assertEquals("Should return the domain of the cookie", "mydomain.com", cookieArgumentCaptor.getValue().getDomain());
+    }
+
+    @Test
     public void testRedirect_whenLocationParameter_shouldModifyStatusCodeSuccessfully() throws Exception { // NOSONAR
         final String finalLocation = "/test";
 
